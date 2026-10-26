@@ -18,7 +18,7 @@ def check(name, condition):
 
 message = updater.chan_doan_pull("Already up to date.")
 check("đã mới nhất: nêu đúng nguồn phát hành chính thức",
-      "github.com/blogminhquy/javis-os.git/main" in message)
+      f"github.com/{updater.us.RELEASE_REPO}.git/main" in message)
 check("đã mới nhất: hướng dẫn Docker nếu cần", "Docker" in message)
 check("không khuyên bỏ nhánh riêng", "checkout main" not in message and "reset --hard" not in message)
 
