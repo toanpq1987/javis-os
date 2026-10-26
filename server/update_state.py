@@ -1,12 +1,18 @@
 """Tầng thuần dùng chung cho cập nhật: so sánh phiên bản + đọc/ghi update_state.json +
 quyết định rollback. Không phụ thuộc FastAPI/main - import được từ cả main.py lẫn updater.py."""
 import json
+import os
 import re
 
 import config as cfgmod
 
 STATE_DIR = cfgmod.STATE_DIR
 STATE_FILE = STATE_DIR / "update_state.json"
+
+# Repo phát hành mà /version, thông báo, changelog VÀ nút cập nhật cùng đọc. Một chỗ duy nhất để
+# main.py và updater.py không bao giờ lệch nhau. Bản fork: trỏ về fork của chủ, lấy bản mới của
+# tác giả gốc bằng `git fetch upstream` rồi tự merge. JAVIS_GITHUB_REPO ghi đè khi cần.
+RELEASE_REPO = (os.getenv("JAVIS_GITHUB_REPO") or "").strip() or "toanpq1987/javis-os"
 
 
 def ver_tuple(s):

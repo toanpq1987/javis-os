@@ -52,7 +52,7 @@ check("lỗi lạ không bịa nguyên nhân",
 os.environ["JAVIS_UPDATE_REMOTE"] = "some-fork"
 os.environ["JAVIS_UPDATE_BRANCH"] = "stable"
 check("nút cập nhật luôn dùng cùng nguồn với /version",
-      updater.release_source() == ("https://github.com/blogminhquy/javis-os.git", "main"))
+      updater.release_source() == (f"https://github.com/{updater.us.RELEASE_REPO}.git", "main"))
 os.environ.pop("JAVIS_UPDATE_REMOTE", None)
 os.environ.pop("JAVIS_UPDATE_BRANCH", None)
 
