@@ -213,6 +213,81 @@ def test_a_checker_that_cannot_run_does_not_rerun_or_block_the_job(tmp_path):
     assert t["metadata"].get("acceptance_check") == "unverified"
 
 
+def _acceptance_job(tmp_path, checker_answer, report="Đã làm xong.", files=None):
+    feature, brain = _feature(tmp_path)
+    for rel, text in (files or {}).items():
+        (brain / rel).parent.mkdir(parents=True, exist_ok=True)
+        (brain / rel).write_text(text, encoding="utf-8")
+    feature._base_cli = lambda *a, **k: object()
+    prompts = []
+
+    async def query(cli, prompt):
+        prompts.append(prompt)
+        return checker_answer, "", []
+
+    feature._query = query
+
+    async def execute(task):
+        return report, "", False, {}
+
+    t = _run(feature, {"brain_root": str(brain), "title": "V2", "intent": "x",
+                       "acceptance": ["file kich-ban/v2.md có đủ 7 mục sửa"]}, execute)
+    return t, prompts
+
+
+def test_a_checker_that_says_it_could_not_check_marks_the_job_unverified(tmp_path):
+    # Field report 27/10/2026 (t_d7224b87f161): Codex in read-only mode on Windows blocks every shell
+    # command, so the checker could not open the file, answered pass=false, and a finished job landed
+    # in "waiting for your answer" with no question in it.
+    t, _ = _acceptance_job(tmp_path, '{"pass": false, "checked": false, '
+                           '"missing": "Không đọc được file vì công cụ bị chặn."}')
+    assert t["status"] == "done", (t["status"], t.get("block_reason"))
+    assert t["metadata"].get("acceptance_check") == "unverified"
+
+
+def test_a_checker_that_only_complains_about_access_is_unverified(tmp_path):
+    # Older prompt shape / a model that ignores the "checked" field: the reason alone says so.
+    t, _ = _acceptance_job(tmp_path, '{"pass": false, "missing": "Không thể nghiệm thu các file '
+                           'trong brain do không có quyền đọc workspace."}')
+    assert t["status"] == "done", (t["status"], t.get("block_reason"))
+    assert t["metadata"].get("acceptance_check") == "unverified"
+
+
+def test_a_real_miss_still_asks_and_says_what_to_do(tmp_path):
+    t, _ = _acceptance_job(tmp_path, '{"pass": false, "checked": true, '
+                           '"missing": "File v2 thiếu mục sửa số 3."}')
+    assert t["status"] == "blocked"
+    reason = t["block_reason"]
+    assert "thiếu mục sửa số 3" in reason
+    # The owner must see this is the checker's finding plus the two ways out, not a bare complaint.
+    assert "nghiệm thu" in reason.lower()
+    assert "Xong" in reason and "trả lời" in reason.lower()
+
+
+def test_checker_prompt_carries_the_files_the_report_names(tmp_path):
+    # An engine whose tools are blocked can still judge: the server reads the named files itself.
+    _, prompts = _acceptance_job(
+        tmp_path, '{"pass": true, "checked": true, "missing": ""}',
+        report="Đã ghi `kich-ban/v2.md`.", files={"kich-ban/v2.md": "MUC-SUA-SO-7 đã sửa"})
+    assert prompts and "MUC-SUA-SO-7" in prompts[0] and "kich-ban/v2.md" in prompts[0]
+
+
+def test_checker_prompt_finds_a_bare_path_inside_a_criterion(tmp_path):
+    _, prompts = _acceptance_job(
+        tmp_path, '{"pass": true, "checked": true, "missing": ""}',
+        report="Đã xong.", files={"kich-ban/v2.md": "NOI-DUNG-V2"})
+    assert prompts and "NOI-DUNG-V2" in prompts[0]
+
+
+def test_checker_prompt_does_not_read_files_outside_the_brain(tmp_path):
+    secret = tmp_path / "secret.txt"
+    secret.write_text("TOP-SECRET-VALUE", encoding="utf-8")
+    _, prompts = _acceptance_job(
+        tmp_path, '{"pass": true, "checked": true, "missing": ""}',
+        report=f"Đã đọc `{secret}` và `../secret.txt`.")
+    assert prompts and "TOP-SECRET-VALUE" not in prompts[0]
+
+
 # ---------------------------------------------------------------- dependents
 
 def test_blocked_parent_names_the_jobs_waiting_on_it(tmp_path):

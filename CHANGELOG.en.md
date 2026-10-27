@@ -10,7 +10,8 @@ Format: each release is a `## [x.y.z] - date` block, with changes grouped under 
 
 ## [0.337.0] - 2026-10-27
 ### Fixed
-- (in progress)
+- **A finished background job no longer gets stuck in "waiting for your answer" just because the acceptance check could not open its files.** On Windows with ChatGPT/Codex as the background engine, the read-only checker was blocked from reading files and marked the job unfinished. Javis now reads the files the job wrote and hands them to the checker; if it still cannot check, the job goes to Done marked "unverified" instead of asking you something.
+- **When the check really finds something missing, the message says what to do.** Instead of a bare "acceptance criteria not met", you see what the checker found and two ways out: move the job to Done if the result is enough, or reply with what is still needed and the job carries on.
 
 ## [0.336.0] - 2026-10-26
 ### Fixed

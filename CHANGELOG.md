@@ -8,7 +8,8 @@ Lịch sử phiên bản Javis OS. Bản mới nhất ở trên cùng. Xem ngay 
 
 ## [0.337.0] - 2026-10-27
 ### Sửa lỗi
-- (đang viết)
+- **Việc nền làm xong không còn bị kẹt ở "chờ trả lời" chỉ vì bộ nghiệm thu không mở được file.** Trên Windows, khi engine nền là ChatGPT/Codex, bộ kiểm chạy ở chế độ chỉ đọc nên bị chặn đọc file và chấm "chưa đạt". Giờ Javis tự đọc sẵn các file việc vừa ghi rồi đưa cho bộ kiểm; nếu bộ kiểm vẫn không kiểm được thì việc vào cột Xong, ghi là "chưa kiểm chứng" thay vì đòi bạn trả lời.
+- **Khi bộ nghiệm thu thật sự thấy thiếu, câu báo nói rõ phải làm gì.** Thay cho dòng cụt "Chưa đạt điều kiện hoàn thành", giờ bạn thấy bộ kiểm thấy thiếu gì, và hai cách xử lý: thấy đủ thì chuyển việc sang Xong, còn thiếu thì trả lời phần cần làm thêm để việc chạy tiếp.
 
 ## [0.336.0] - 2026-10-26
 ### Sửa lỗi
